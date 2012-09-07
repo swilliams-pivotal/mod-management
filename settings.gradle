@@ -1,0 +1,5 @@
+include 'mod-management-agent'
+include 'mod-management-api'
+include 'mod-management-gui'
+include 'mod-management-monitor'
+include 'mod-management-common'

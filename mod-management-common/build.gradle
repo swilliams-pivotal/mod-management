@@ -1,0 +1,16 @@
+// This is a sub-project
+
+project.ext.title = 'Project common'
+project.ext.description = 'A description stub for Project common'
+project.ext.packageVersion = '0.1-SNAPSHOT'
+project.ext.packageName = 'A_PACKAGE_NAME'
+
+jar {
+        archiveName = "${packageName}-${packageVersion}.jar"
+        manifest {
+                attributes (
+                        'Implementation-Title': "$title",
+                        'Implementation-Version': "$packageVersion"
+                )
+        }
+}
