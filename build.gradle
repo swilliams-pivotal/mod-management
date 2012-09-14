@@ -35,10 +35,9 @@ subprojects {
   }
 
   repositories {
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
     maven { url 'http://repo.springsource.org/release' }
-    maven { url 'http://download.java.net/maven/2' }
     mavenCentral()
-    mavenLocal()
   }
   
   dependencies {
@@ -50,7 +49,7 @@ subprojects {
     testCompile "junit:junit:$junitVersion"
     testCompile "org.mozilla:rhino:$rhinoVersion"
 
-    testCompile "org.vert-x:vertx-junit-annotations:1.0"
+    testCompile "org.vert-x:vertx-junit-annotations:$junitAnnoVersion"
     testCompile "org.vert-x:vertx-lang-java:$vertxVersion"
     testCompile "org.vert-x:vertx-lang-rhino:$vertxVersion"
     testCompile("org.vert-x:vertx-testframework:$vertxVersion") {
