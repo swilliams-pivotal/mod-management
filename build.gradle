@@ -39,7 +39,9 @@ subprojects {
     maven { url 'http://repo.springsource.org/release' }
     mavenCentral()
   }
-  
+
+  jar.enabled = false
+
   dependencies {
     provided "org.vert-x:vertx-core:$vertxVersion"
     provided "org.vert-x:vertx-platform:$vertxVersion"
@@ -62,6 +64,20 @@ subprojects {
 // --------------------------------------------------------------------
 // global task definitions
 
+task assemble(type: Sync, dependsOn: subprojects.assemble) {
+  destinationDir = file("build/vertx.management-v$version")
+  into("build/vertx.management-v$version/mods") {
+    subprojects.each { p->
+      from "${p.buildDir}/mod"
+    }
+  }
+  from 'src/main/conf'
+  from 'src/main/resources'
+}
+
+task vertxRunPlatform() {
+  
+}
 
 // --------------------------------------------------------------------
 // Sub projects
@@ -91,6 +107,12 @@ project(":mod-management-gui") {
 }
 
 project(":mod-management-monitor") {
+  dependencies {
+    compile project(":mod-management-common")
+  }
+}
+
+project(":mod-management-collector") {
   dependencies {
     compile project(":mod-management-common")
   }

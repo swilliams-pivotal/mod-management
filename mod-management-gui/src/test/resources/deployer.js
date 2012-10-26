@@ -14,19 +14,31 @@
  * limitations under the License.
  */
 
-load('test_utils.js')
 load('vertx.js')
 
-var tu = new TestUtils();
-
-var config = {
+var mongo = {
+  "address": "vertx.metrics.data",
+  "host": "127.0.0.1",
+  "port": 27017,
+  "db_name": "metrics_db"
 }
 
-var modID = vertx.deployModule('vertx.management-gui-v1.0', config, 1, function() {
-  tu.appReady();
+var collector = {
+  "mongodb": "metrics_db"
+}
+
+var config = {
+  "mongodb": "metrics_db"
+}
+
+vertx.deployModule('vertx.mongo-persistor-v1.0', mongo, 1, function() {
+  vertx.deployModule('vertx.management-collector-v1.0', collector, 1, function() {
+    vertx.deployModule('vertx.management-gui-v1.0', config, 1, function() {
+      // 
+    });
+  });
 });
 
 function vertxStop() {
-  tu.unregisterAll();
-  tu.appStopped();
+  //
 }

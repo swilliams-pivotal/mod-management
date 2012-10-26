@@ -1,0 +1,78 @@
+h2 span.light {
+  color: #ccc;
+  font-size: 24px;
+}
+
+.dial {
+  margin: 0 0 10px;
+  padding: 8px;
+  border: 1px solid #eee;
+  border-radius: 6px;
+}
+.dialcanvas {
+  border-radius: 6px;
+}
+
+.frame {
+  margin: 0 0 10px;
+  padding: 8px;
+  border: 2px solid #eee;
+  /*
+  background-color: #f8f8f8;
+  */
+  border-radius: 6px;
+}
+.frame canvas {
+  background-color: #fff;
+}
+
+.graph {
+  margin: 0 0 10px;
+  padding: 8px;
+  border: 1px solid #eee;
+  border-radius: 6px;
+}
+
+.gauge {
+  margin: 0 0 10px;
+  padding: 4px 8px 6px;
+  border: 1px solid #eee;
+  /*
+  background-color: #eee;
+  */
+  border-radius: 6px;
+}
+.gauge p {
+  text-align: left;
+  margin: 0;
+  padding: 0;
+}
+.gauge p.val {
+  font-size: 18px;
+  font-weight: bold;
+}
+.gauge .vlabel {
+  color: #999;
+  font-size: 12px;
+}
+
+.histo {
+  height: 62px;
+  margin: 0 0 10px;
+  padding: 8px 0px 8px 5px;
+  border: 1px solid #eee;
+  border-radius: 6px;
+}
+
+.vpill {
+  float: left;
+  width: 8px;
+  height: 25px;
+  margin: 5px 6px 0 0;
+  display: block;
+  background-color: #9ef;
+  border-radius: 6px;
+}
+.vpill.off {
+  background-color: #eee;
+}

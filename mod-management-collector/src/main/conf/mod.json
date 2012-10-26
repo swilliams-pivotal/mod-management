@@ -1,0 +1,3 @@
+{
+  "main":"management/mongo-collector.js"
+}

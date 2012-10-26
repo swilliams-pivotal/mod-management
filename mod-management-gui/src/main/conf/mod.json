@@ -1,3 +1,3 @@
 {
-  "main":"org.vertx.mods.management.gui.ManagementGUIMod"
+  "main":"management/gui.js"
 }

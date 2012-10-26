@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+
+<!-- paulirish.com/2008/conditional-stylesheets-vs-css-hacks-answer-neither/ -->
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width" />
+  <title>vert.x console</title>
+  <link rel="stylesheet" href="styles/foundation.css">
+  <link rel="stylesheet" href="styles/vertx.css">
+  <script src="http://cdn.sockjs.org/sockjs-0.2.1.min.js"></script>
+  <script src="scripts/modernizr.foundation.js"></script>
+  <!--[if lt IE 9]>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+</head>
+<body>
+
+  <div class="row">
+    <div class="five columns">
+      <h2>demo <span class="light">console</span></h2>
+      <p>login</p>
+    </div>
+    <div class="seven columns">
+      <p>login</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="twelve columns">
+      <div class="frame">
+        <canvas id="main1" width="900" height="100"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="two columns">
+      <div class="gauge">
+        <p class="val">23 ev/s</p>
+        <p class="vlabel">EventBus</p>
+      </div>
+    </div>
+    <div class="one columns">
+      <div class="gauge">
+        <p class="val">67%</p>
+        <p class="vlabel">OS</p>
+      </div>
+    </div>
+    <div class="one columns">
+      <div class="gauge">
+        <p class="val">1.2G</p>
+        <p class="vlabel">Process</p>
+      </div>
+    </div>
+    <div class="one columns">
+      <div class="gauge">
+        <p class="val">31%</p>
+        <p class="vlabel">Heap</p>
+      </div>
+    </div>
+    <div class="one columns">
+      <div class="gauge">
+        <p class="val">57%</p>
+        <p class="vlabel">Non-H</p>
+      </div>
+    </div>
+    <div class="four columns">
+      <div class="gauge">
+        <canvas id="status1" class="right" width="225" height="50"></canvas>
+        <p class="val">005</p>
+        <p class="vlabel">Nodes</p>
+      </div>
+    </div>
+    <div class="two columns">
+      <div class="gauge">
+        <p class="val">03:22:01</p>
+        <p class="vlabel">Uptime</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="two columns">
+      <div class="histo">
+        <div>histo</div>
+        <span class="vpill"> </span>
+        <span class="vpill"> </span>
+        <span class="vpill"> </span>
+
+        <span class="vpill"> </span>
+        <span class="vpill"> </span>
+        <span class="vpill"> </span>
+
+        <span class="vpill"> </span>
+        <span class="vpill off"> </span>
+        <span class="vpill off"> </span>
+        <br/>
+      </div>
+      <div class="histo">
+        <div>histo</div>
+        <span class="vpill"> </span>
+        <span class="vpill"> </span>
+        <span class="vpill"> </span>
+
+        <span class="vpill"> </span>
+        <span class="vpill"> </span>
+        <span class="vpill"> </span>
+
+        <span class="vpill off"> </span>
+        <span class="vpill off"> </span>
+        <span class="vpill off"> </span>
+        <br/>
+      </div>
+    </div>
+    <div class="two columns">
+      <div class="dial">
+        <canvas id="dial1" class="dialcanvas" width="116" height="116"></canvas>
+      </div>
+    </div>
+    <div class="two columns">
+      <div class="dial">
+        <canvas id="dial2" class="dialcanvas" width="116" height="116"></canvas>
+      </div>
+    </div>
+    <div class="four columns">
+      <div class="graph">
+        <canvas id="histo1" width="274" height="116"></canvas>
+      </div>
+    </div>
+    <div class="two columns">
+      <div class="graph">
+        <canvas id="histo2" width="116" height="116"></canvas>
+      </div>
+    </div>
+  </div>
+
+<!--
+
+  <div class="row">
+    <div class="three columns">
+      <h6>Managed Nodes</h6>
+      <p>
+        [127.0.0.1:40001] nodename1<br/>
+        [127.0.0.1:40002] nodename2<br/>
+        [127.0.0.1:40003] nodename3<br/>
+        [127.0.0.1:40004] nodename4<br/>
+        [127.0.0.1:40005] nodename5<br/>
+        [127.0.0.1:40006] nodename6<br/>
+      </p>
+    </div>
+    <div class="four columns">
+      <h6>Verticles</h6>
+      <div class="graph">
+        temp<br/><br/><br/><br/>
+        <br/><br/><br/><br/>
+      </div>
+    </div>
+    <div class="five columns">
+      <h6>Event Log</h6>
+      <p>
+        2012-09-01 23:00:01 DEBUG 'message was here'<br/>
+        2012-09-01 23:00:03 DEBUG 'a message was here'<br/>
+        2012-09-01 23:01:07 DEBUG 'this message done'<br/>
+        2012-09-01 23:10:01 DEBUG 'some info was here'<br/>
+        2012-09-01 23:17:13 DEBUG 'small data message'<br/>
+        2012-09-01 23:20:47 DEBUG 'this message here'<br/>
+      </p>
+    </div>
+  </div>
+
+-->
+
+  <div class="row">
+    <div class="twelve columns">
+      <hr />
+      <p>This is version <strong>3.1.1</strong> generated on September 20, 2012.</p>
+    </div>
+  </div>
+
+
+  <!--
+
+  <div class="row">
+    <div class="twelve columns">
+      <h3>Reveal</h3>
+      <p><a href="#" data-reveal-id="exampleModal" class="button">Example modal</a></p>
+    </div>
+  </div>
+
+  <div id="exampleModal" class="reveal-modal">
+    <h2>This is a modal.</h2>
+    <p>
+      Reveal makes these very easy to summon and dismiss. The close button is simple an anchor with a unicode 
+      character icon and a class of <code>close-reveal-modal</code>. Clicking anywhere outside the modal will 
+      also dismiss it.
+    </p>
+    <a class="close-reveal-modal">×</a>
+  </div>
+
+  <script src="scripts/jquery.js"></script>
+  <script src="scripts/jquery.foundation.mediaQueryToggle.js"></script>
+  <script src="scripts/jquery.foundation.forms.js"></script>
+  <script src="scripts/jquery.foundation.reveal.js"></script>
+  <script src="scripts/jquery.foundation.orbit.js"></script>
+  <script src="scripts/jquery.foundation.navigation.js"></script>
+  <script src="scripts/jquery.foundation.buttons.js"></script>
+  <script src="scripts/jquery.foundation.tabs.js"></script>
+  <script src="scripts/jquery.foundation.tooltips.js"></script>
+  <script src="scripts/jquery.foundation.accordion.js"></script>
+  <script src="scripts/jquery.placeholder.js"></script>
+  <script src="scripts/jquery.foundation.alerts.js"></script>
+  <script src="scripts/jquery.foundation.topbar.js"></script>
+
+  -->
+
+  <script src="scripts/jquery.js"></script>
+  <script src="scripts/foundation.min.js"></script>
+  <script src="scripts/setup.js"></script>
+  <script src="scripts/vertx.js"></script>
+
+  <script>
+   var sock = new SockJS('http://localhost:8080/metrics');
+   sock.onopen = function() {
+       console.log('open');
+   };
+   sock.onmessage = function(e) {
+       console.log('message', e.data);
+       var type = e.data.type;
+       // alert('received message echoed from server: ' + e.data);
+   };
+   sock.onclose = function() {
+       console.log('close');
+   };
+
+   function send(message) {
+
+     if (sock.readyState == WebSocket.OPEN) {
+        console.log("sending message")
+        sock.send(message);
+     } else {
+        console.log("The socket is not open.");
+     }
+   }
+  </script>
+
+</body>
+</html>

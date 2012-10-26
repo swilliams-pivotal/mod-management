@@ -20,6 +20,7 @@ load('vertx.js')
 var tu = new TestUtils();
 
 var config = {
+  port: 8081
 }
 
 var modID = vertx.deployModule('vertx.management-api-v1.0', config, 1, function() {

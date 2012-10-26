@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-load('test_utils.js')
 load('vertx.js')
 
-var tu = new TestUtils();
-
 var config = {
+  "address": "vertx.management.metrics",
+  "period": 3000
 }
 
-var modID = vertx.deployModule('vertx.management-agent-v1.0', config, 1, function() {
-  tu.appReady();
+vertx.deployModule('vertx.management-agent-v1.0', config, 1, function() {
+  // deployed
 });
 
 function vertxStop() {
-  tu.unregisterAll();
-  tu.appStopped();
+  // stop
 }
