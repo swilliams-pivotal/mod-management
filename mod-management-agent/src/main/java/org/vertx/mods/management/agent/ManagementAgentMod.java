@@ -17,15 +17,17 @@ import org.vertx.java.core.json.JsonObject;
 
 public class ManagementAgentMod extends BusModBase implements Handler<Message<JsonObject>> {
 
+  private static final String VERTX_MANAGEMENT_AGENT_CONTROL = "vertx.management.agent.control";
+
   private RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
 
   private Set<Long> timers = new HashSet<Long>();
 
   private String managementAddress;
 
-  private long periodicTimerId;
+  private String moduleAddress;
 
-  private String handlerId;
+  private long periodicTimerId;
 
   private JsonObject base;
 
@@ -37,6 +39,7 @@ public class ManagementAgentMod extends BusModBase implements Handler<Message<Js
 
     int period = getOptionalIntConfig("period", 5000);
     String uuid = getOptionalStringConfig("uuid", UUID.randomUUID().toString());
+    this.managementAddress = getOptionalStringConfig("address", VERTX_MANAGEMENT_AGENT_CONTROL);
 
     this.base = new JsonObject()
       .putString("uuid", uuid)
@@ -44,12 +47,13 @@ public class ManagementAgentMod extends BusModBase implements Handler<Message<Js
       .putString("name", runtimeMXBean.getName());
 
     this.agent = new ManagementAgent(eb, base);
-    this.managementAddress = super.getOptionalStringConfig("address", "vertx.management.agent.control");
     this.periodicTimerId = vertx.setPeriodic(period, agent);
     this.timers.add(periodicTimerId);
 
+    this.moduleAddress = String.format("%s.%s", managementAddress, uuid);
+
     final CountDownLatch latch = new CountDownLatch(1);
-    this.handlerId = eb.registerHandler(managementAddress + "." + uuid, this, new AsyncResultHandler<Void>() {
+    eb.registerHandler(moduleAddress, this, new AsyncResultHandler<Void>() {
       @Override
       public void handle(AsyncResult<Void> event) {
         latch.countDown();
@@ -66,7 +70,7 @@ public class ManagementAgentMod extends BusModBase implements Handler<Message<Js
       .putNumber("timestamp", System.currentTimeMillis())
       .putString("status", "started");
 
-    eb.publish(managementAddress, started);
+    eb.publish(managementAddress + "." + uuid, started);
   }
 
   @Override
@@ -81,7 +85,7 @@ public class ManagementAgentMod extends BusModBase implements Handler<Message<Js
       .putString("status", "stapped");
     eb.publish(managementAddress, stapped);
 
-    eb.unregisterHandler(handlerId);
+    eb.unregisterHandler(moduleAddress, this);
 
     super.stop();
   }

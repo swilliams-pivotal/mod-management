@@ -14,25 +14,26 @@
  * limitations under the License.
  */
 
+buildscript {
+  repositories {
+    mavenLocal()
+    // maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+    mavenCentral()
+  }
+  dependencies {
+    classpath "org.vert-x:gradle-plugin:1.3.0-SNAPSHOT"
+  }
+}
+
 apply from: 'gradle/setup.gradle'
 
 subprojects {
-  apply plugin: 'java'
+  apply plugin: 'vertx'
 
   defaultTasks = ['assemble']
 
   sourceCompatibility = '1.7'
   targetCompatibility = '1.7'
-
-  configurations {
-    provided
-  }
-
-  sourceSets {
-    main {
-      compileClasspath = compileClasspath + configurations.provided
-    }
-  }
 
   repositories {
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
@@ -40,23 +41,22 @@ subprojects {
     mavenCentral()
   }
 
+  javadoc.classpath += configurations.vertxProvided
   jar.enabled = false
 
   dependencies {
-    provided "org.vert-x:vertx-core:$vertxVersion"
-    provided "org.vert-x:vertx-platform:$vertxVersion"
-    provided "org.vert-x:vertx-lang-groovy:$vertxVersion"
-    provided "org.codehaus.groovy:groovy-all:$groovyVersion"
+    vertxProvided "org.vert-x:vertx-core:$vertxVersion"
+    vertxProvided "org.vert-x:vertx-platform:$vertxVersion"
 
     testCompile "junit:junit:$junitVersion"
-    testCompile "org.mozilla:rhino:$rhinoVersion"
 
     testCompile "org.vert-x:vertx-junit-annotations:$junitAnnoVersion"
     testCompile "org.vert-x:vertx-lang-java:$vertxVersion"
     testCompile "org.vert-x:vertx-lang-rhino:$vertxVersion"
-    testCompile("org.vert-x:vertx-testframework:$vertxVersion") {
-      transitive = false // don't need all of the other language deps
-    }
+    testCompile "org.vert-x:vertx-lang-groovy:$vertxVersion"
+
+    testCompile "org.codehaus.groovy:groovy-all:$groovyVersion"
+    testCompile "org.mozilla:rhino:$rhinoVersion"
   }
 }
 
@@ -64,7 +64,7 @@ subprojects {
 // --------------------------------------------------------------------
 // global task definitions
 
-task assemble(type: Sync, dependsOn: subprojects.assemble) {
+task assembleAll(type: Sync, dependsOn: subprojects.assemble) {
   destinationDir = file("build/vertx.management-v$version")
   into("build/vertx.management-v$version/mods") {
     subprojects.each { p->
@@ -75,8 +75,25 @@ task assemble(type: Sync, dependsOn: subprojects.assemble) {
   from 'src/main/resources'
 }
 
-task vertxRunPlatform() {
-  
+
+task testAll(dependsOn: subprojects.test) {
+  //
+}
+
+task vertxIntegAll(dependsOn: subprojects.vertxInteg) {
+//
+}
+
+
+task assemble(type: Sync, dependsOn: subprojects.assemble) {
+  destinationDir = file("build/vertx.management-v$version")
+  into("build/vertx.management-v$version/mods") {
+    subprojects.each { p->
+      from "${p.buildDir}/mod"
+    }
+  }
+  from 'src/main/conf'
+  from 'src/main/resources'
 }
 
 // --------------------------------------------------------------------

@@ -1,132 +1,137 @@
+var pools = {
+  id: 'main1',
+  title: 'Thread pools:',
+  font: '12px sans-serif',
+  color: '#999',
+  series: [
+    {
+      title: 'Event',
+      width: 2,
+      color: '#6f6',
+      data: [4,2,-1,-3,-1,1,2,4,5,2,3,4,1,0,1,-1,1,-3,1,3,2,1,2,1,3,4,3,4,2,0,-1,2,3,1,3,4,2,-1,-3,-1,1,2,4,5,2,3,4,1,0,1,-1,1,-3,13,2,1,2,1,3,4,3,4,2,0,-1,2,3,1,3,4,2,-1,-3,-1,1,2,4,5,2,3,4,1,0,1,-1,1,-3,13,2,1,2,1,3,4,3,4,2,0,-1,2,3,1,3]
+    },
+    {
+      title: 'Worker',
+      width: 2,
+      color: '#9ef',
+      data: [3,2,1,2,1,3,4,3,4,2,0,-1,2,3,1,3,4,2,-1,-3,-1,1,2,4,5,2,3,4,1,0,1,-1,1,-3,13,2,1,2,1,3,4,3,4,2,0,-1,2,3,1,3,4,2,-1,-3,-1,1,2,4,5,2,3,4,1,0,1,-1,1,-3,13,2,1,2,1,3,4,3,4,2,0,-1,2,3,1,3,4,2,-1,-3,-1,1,2,4,5,2,3,4,1,0,1,-1,1,-3,1]
+    }
+  ]
+}
+
+var memory1 = {
+  id: 'histo1',
+  title: 'Memory:',
+  font: '12px sans-serif',
+  color: '#999',
+  series: [
+    {
+      title: 'Heap',
+      color: '#6f6',
+      data: [0,3,5,7,11,13,0,3,5,7,11,13,17,19,23,29,31]
+    },
+    {
+      title: 'Non-heap',
+      color: '#9ef',
+      data: [0,3,5,7,11,13,17,19,23,29,31,37,41,43,51,53,57]
+    }
+  ]
+}
+
+var memory2 = {
+  id: 'histo2',
+  title: 'Memory:',
+  font: '12px sans-serif',
+  color: '#999',
+  series: [
+    {
+      title: 'Data1',
+      color: '#6f6',
+      data: [0,3,5,7,11,13,0,3,5,7,11,13,17,19,23,29,31]
+    },
+    {
+      title: 'Data2',
+      color: '#9ef',
+      data: [0,3,5,7,11,13,17,19,23,29,31,37,41,43,51,53,57]
+    },
+    {
+      title: 'Data3',
+      color: '#9ef',
+      data: [0,3,5,7,11,13,17,19,23,29,31,37,41,43,51,53,57]
+    }
+  ]
+}
+
+var dial1 = {
+  spacing: 5,
+  data: [['#fc6',22,67,91],['#fc6',10,37,51]]
+//  data: [['#fc6',22,67,91],['#fc6',10,37,51],['#ddd',3,100,100]]
+}
+
+var dial2 = {
+  spacing: 5,
+  data: [['#9ef',22,37,51],['#9ef',10,57,73]]
+//  data: [['#9ef',22,37,51],['#9ef',10,57,73],['#ddd',3,100,100]]
+}
+
+var nodestatus = {
+  id: 'status1',
+  title: 'Status:',
+  font: '12px sans-serif',
+  color: '#ccc',
+  series: [
+    {
+      title: 'Data1',
+      color: '#9ef',
+      data: [0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1]
+    },
+    {
+      title: 'Data2',
+      color: '#9ef',
+      data: [0,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    },
+    {
+      title: 'Data3',
+      color: '#9ef',
+      data: [1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    },
+    {
+      title: 'Data4',
+      color: '#9ef',
+      data: [1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1]
+    },
+    {
+      title: 'Data5',
+      color: '#9ef',
+      data: [1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,0,0,1,1,1,1,1,1,1]
+    }
+  ]
+}
+
 ;(function ($, window, undefined) {
   'use strict';
 
-  var pools = {
-    id: 'main1',
-    title: 'Thread pools:',
-    font: '12px sans-serif',
-    color: '#999',
-    series: [
-      {
-        title: 'Event',
-        width: 2,
-        color: '#6f6',
-        data: [4,2,-1,-3,-1,1,2,4,5,2,3,4,1,0,1,-1,1,-3,1,3,2,1,2,1,3,4,3,4,2,0,-1,2,3,1,3,4,2,-1,-3,-1,1,2,4,5,2,3,4,1,0,1,-1,1,-3,13,2,1,2,1,3,4,3,4,2,0,-1,2,3,1,3,4,2,-1,-3,-1,1,2,4,5,2,3,4,1,0,1,-1,1,-3,13,2,1,2,1,3,4,3,4,2,0,-1,2,3,1,3]
-      },
-      {
-        title: 'Worker',
-        width: 2,
-        color: '#9ef',
-        data: [3,2,1,2,1,3,4,3,4,2,0,-1,2,3,1,3,4,2,-1,-3,-1,1,2,4,5,2,3,4,1,0,1,-1,1,-3,13,2,1,2,1,3,4,3,4,2,0,-1,2,3,1,3,4,2,-1,-3,-1,1,2,4,5,2,3,4,1,0,1,-1,1,-3,13,2,1,2,1,3,4,3,4,2,0,-1,2,3,1,3,4,2,-1,-3,-1,1,2,4,5,2,3,4,1,0,1,-1,1,-3,1]
-      }
-    ]
-  }
 
-  chart(pools)
+  // chart(pools)
 
-  var memory1 = {
-    id: 'histo1',
-    title: 'Memory:',
-    font: '12px sans-serif',
-    color: '#999',
-    series: [
-      {
-        title: 'Heap',
-        color: '#6f6',
-        data: [0,3,5,7,11,13,0,3,5,7,11,13,17,19,23,29,31]
-      },
-      {
-        title: 'Non-heap',
-        color: '#9ef',
-        data: [0,3,5,7,11,13,17,19,23,29,31,37,41,43,51,53,57]
-      }
-    ]
-  }
 
   histogram(memory1)
 
-  var memory2 = {
-    id: 'histo2',
-    title: 'Memory:',
-    font: '12px sans-serif',
-    color: '#999',
-    series: [
-      {
-        title: 'Data1',
-        color: '#6f6',
-        data: [0,3,5,7,11,13,0,3,5,7,11,13,17,19,23,29,31]
-      },
-      {
-        title: 'Data2',
-        color: '#9ef',
-        data: [0,3,5,7,11,13,17,19,23,29,31,37,41,43,51,53,57]
-      },
-      {
-        title: 'Data3',
-        color: '#9ef',
-        data: [0,3,5,7,11,13,17,19,23,29,31,37,41,43,51,53,57]
-      }
-    ]
-  }
-
   sparklines(memory2)
 
-  var dial1 = {
-    id: 'dial1',
-    spacing: 5,
-    data: [['#fc6',22,67,91],['#fc6',10,37,51]]
-//    data: [['#fc6',22,67,91],['#fc6',10,37,51],['#ddd',3,100,100]]
-  }
-
-  var dial2 = {
-    id: 'dial2',
-    spacing: 5,
-    data: [['#9ef',22,37,51],['#9ef',10,57,73]]
-//    data: [['#9ef',22,37,51],['#9ef',10,57,73],['#ddd',3,100,100]]
-  }
-
-  concentricDial(dial1)
-  concentricDial(dial2)
-
   // dial('dial2', 41, 5)
-
-  var nodestatus = {
-    id: 'status1',
-    title: 'Status:',
-    font: '12px sans-serif',
-    color: '#ccc',
-    series: [
-      {
-        title: 'Data1',
-        color: '#9ef',
-        data: [0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1]
-      },
-      {
-        title: 'Data2',
-        color: '#9ef',
-        data: [0,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-      },
-      {
-        title: 'Data3',
-        color: '#9ef',
-        data: [1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-      },
-      {
-        title: 'Data4',
-        color: '#9ef',
-        data: [1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1]
-      },
-      {
-        title: 'Data5',
-        color: '#9ef',
-        data: [1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,0,0,1,1,1,1,1,1,1]
-      }
-    ]
-  }
 
   boxgrid(nodestatus)
 
 })(jQuery, this);
+
+$(document).ready(function() {
+  $('#main1').lineChart(pools);
+  $('#dial1').radialChart(dial1)
+  $('#dial2').radialChart(dial2)
+});
+
+
 
 // $('#dial1').dial(63, 5)
 
@@ -240,52 +245,5 @@ function chart(dataset) {
     ctx.font = 'bold ' + dataset.font;
     ctx.fillText(series.title, 10 + textOffset + (20 * j), 10)
     textOffset += ctx.measureText(series.title, 20, 10).width
-  }
-}
-
-function concentricDial(dial) {
-  var canvas = document.getElementById(dial.id)
-
-  var ctx = canvas.getContext('2d');
-  var x = canvas.height / 2;
-  var y = canvas.width / 2;
-  var r = canvas.width / 2;
-
-  for (var i=0; i<dial.data.length; i++) {
-    var data = dial.data[i]
-    var width = data[1]
-
-    var max = (1.5 + (2*(data[3]/100))) * Math.PI;
-    ctx.beginPath();
-    ctx.moveTo(x,y);
-    ctx.lineTo(x,0);
-    ctx.arc(x,y,r,1.5*Math.PI,max);
-    ctx.lineTo(x,y);
-    ctx.globalAlpha = 0.3;
-    ctx.fillStyle=data[0];
-    ctx.fill();
-    ctx.closePath();
-
-    var rad = (1.5 + (2*(data[2]/100))) * Math.PI;
-    ctx.beginPath();
-    ctx.moveTo(x,y);
-    ctx.lineTo(x,0);
-    ctx.arc(x,y,r,1.5*Math.PI,rad);
-    ctx.lineTo(x,y);
-    ctx.globalAlpha = 1;
-    ctx.fillStyle=data[0];
-    ctx.fill();
-    ctx.closePath();
-
-    ctx.beginPath();
-    ctx.moveTo(x,y);
-    ctx.lineTo(x,0);
-    ctx.arc(x,y,r-width,1.5,1.5+(2*Math.PI));
-    ctx.lineTo(x,y);
-    ctx.fillStyle='#fff';
-    ctx.fill();
-    ctx.closePath();
-
-    r = r - (dial.spacing + width)
   }
 }
