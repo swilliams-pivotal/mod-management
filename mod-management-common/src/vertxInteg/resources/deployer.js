@@ -21,8 +21,9 @@ var config = {
   "period": 3000
 }
 
-vertx.deployModule('vertx.management-collector-v1.0', config, 1, function() {
+vertx.deployModule('vertx.management-common-v1.0', config, 1, function(id) {
   // deployed
+  console.log('deployed vertx.management-common-v1.0 with id: ' + id)
 });
 
 function vertxStop() {

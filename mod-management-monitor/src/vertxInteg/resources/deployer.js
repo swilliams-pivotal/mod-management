@@ -14,19 +14,16 @@
  * limitations under the License.
  */
 
-load('test_utils.js')
 load('vertx.js')
-
-var tu = new TestUtils();
 
 var config = {
 }
 
-var modID = vertx.deployModule('vertx.management-monitor-v1.0', config, 1, function() {
-  tu.appReady();
+var modID = vertx.deployModule('vertx.management-monitor-v1.0', config, 1, function(id) {
+  console.log('deployed vertx.management-monitor-v1.0 with id: ' + id)
 });
 
+
 function vertxStop() {
-  tu.unregisterAll();
-  tu.appStopped();
+
 }

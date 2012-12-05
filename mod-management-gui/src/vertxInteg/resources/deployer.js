@@ -31,10 +31,14 @@ var config = {
   "mongodb": "metrics_db"
 }
 
-vertx.deployModule('vertx.mongo-persistor-v1.0', mongo, 1, function() {
-  vertx.deployModule('vertx.management-collector-v1.0', collector, 1, function() {
-    vertx.deployModule('vertx.management-gui-v1.0', config, 1, function() {
-      // 
+vertx.deployModule('vertx.mongo-persistor-v1.2', mongo, 1, function(id1) {
+  console.log('deployed vertx.mongo-persistor-v1.2 with id: ' + id1)
+
+  vertx.deployModule('vertx.management-collector-v1.0', collector, 1, function(id2) {
+    console.log('deployed vertx.management-collector-v1.0 with id: ' + id2)
+
+    vertx.deployModule('vertx.management-gui-v1.0', config, 1, function(id3) {
+      console.log('deployed vertx.management-gui-v1.0 with id: ' + id3)
     });
   });
 });

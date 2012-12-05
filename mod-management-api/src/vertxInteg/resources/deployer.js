@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
-load('test_utils.js')
 load('vertx.js')
-
-var tu = new TestUtils();
 
 var config = {
   port: 8081
 }
 
-var modID = vertx.deployModule('vertx.management-api-v1.0', config, 1, function() {
-  tu.appReady();
+var modID = vertx.deployModule('vertx.management-api-v1.0', config, 1, function(id1) {
+  console.log('deployed vertx.management-api-v1.0 with id: ' + id1)
 });
 
 function vertxStop() {
-  tu.unregisterAll();
-  tu.appStopped();
+  //
 }

@@ -21,8 +21,8 @@ var config = {
   "period": 3000
 }
 
-vertx.deployModule('vertx.management-agent-v1.0', config, 1, function() {
-  // deployed
+vertx.deployModule('vertx.management-agent-v1.0', config, 1, function(id1) {
+  console.log('deployed vertx.management-agent-v1.0 with id: ' + id1)
 });
 
 function vertxStop() {
