@@ -70,7 +70,7 @@ public class ManagementAgentMod extends BusModBase implements Handler<Message<Js
       .putNumber("timestamp", System.currentTimeMillis())
       .putString("status", "started");
 
-    eb.publish(managementAddress + "." + uuid, started);
+    eb.publish(moduleAddress, started);
   }
 
   @Override
