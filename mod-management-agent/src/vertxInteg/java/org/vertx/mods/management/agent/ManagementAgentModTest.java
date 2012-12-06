@@ -37,8 +37,10 @@ public class ManagementAgentModTest extends VertxTestBase {
 
   @Test
   public final void test() {
+    long delay = Long.getLong("vertx.test.agentWait", 60000L);
+
     try {
-      Thread.sleep(10000L);
+      Thread.sleep(delay);
     } catch (InterruptedException e) {
       fail(e.getMessage());
     }
