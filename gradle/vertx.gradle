@@ -1,0 +1,72 @@
+apply plugin: 'publishing'
+apply plugin: 'maven-publish'
+
+
+ext.modulePackageName = "${project.group}~${project.name}~${project.version}"
+
+configurations {
+  provided
+  compile.extendsFrom provided
+}
+
+publishing {
+  repositories {
+    maven {
+      credentials {
+        username project.sonatypeUsername
+        password project.sonatypePassword
+      }
+      name 'snapshots'
+      url 'https://oss.sonatype.org/content/repositories/snapshots'
+    }
+    maven {
+      credentials {
+        username project.sonatypeUsername
+        password project.sonatypePassword
+      }
+      name 'staging'
+      url 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
+    }
+  }
+  publications {
+    maven(MavenPublication) {
+      artifact("build/libs/${project.name}-${project.version}.zip") {
+        extension "zip"
+        builtBy zipMod
+      }
+    }
+  }
+}
+
+jar.enabled = false
+
+task makeMod(type: Copy) {
+  destinationDir mkdir("build/mod/$modulePackageName")
+  outputs.file file("build/mod/$modulePackageName")
+
+  into "build/mod/$modulePackageName"
+  from compileJava
+  from compileGroovy
+  from processResources
+
+  into('lib') {
+    from configurations.compile - configurations.provided
+  }
+}
+
+task zipMod(type: Zip, dependsOn:['makeMod']) {
+  destinationDir mkdir('build/libs')
+  inputs.files file('build/mod')
+  outputs.files destinationDir
+
+  from "build/mod/$modulePackageName"
+
+  archiveName = "${project.name}-${project.version}.zip"
+  // includes = ["$modulePackageName"]
+}
+
+artifacts {
+  archives zipMod
+}
+
+

@@ -1,7 +1,10 @@
+.cache
 .classpath
+.DS_Store
 .gradle
 .project
 .settings
 .springBeans
 bin
 build
+

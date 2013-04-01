@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
+/*
 buildscript {
   repositories {
-    mavenLocal()
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
     mavenCentral()
   }
@@ -24,11 +24,16 @@ buildscript {
     classpath "org.vert-x:gradle-plugin:1.3.0-SNAPSHOT"
   }
 }
-
+*/
 apply from: 'gradle/setup.gradle'
 
 subprojects {
-  apply plugin: 'vertx'
+  // apply plugin: 'eclipse'
+  apply plugin: 'groovy'
+  apply plugin: 'build-dashboard'
+//  apply plugin: 'codenarc'
+
+  apply from: "$rootDir/gradle/vertx.gradle"
 
   defaultTasks = ['assemble']
 
@@ -41,22 +46,21 @@ subprojects {
     mavenCentral()
   }
 
-  javadoc.classpath += configurations.vertxProvided
+  javadoc.classpath += configurations.provided
   jar.enabled = false
 
   dependencies {
-    vertxProvided "org.vert-x:vertx-core:$vertxVersion"
-    vertxProvided "org.vert-x:vertx-platform:$vertxVersion"
+    provided "io.vertx:vertx-core:$vertxVersion"
+    provided "io.vertx:vertx-platform:$vertxVersion"
+    provided "io.vertx:lang-groovy:1.0.0-SNAPSHOT"
+    provided "org.codehaus.groovy:groovy-all:$groovyVersion"
 
     testCompile "junit:junit:$junitVersion"
+    testCompile "io.vertx:testtools:1.0.0-SNAPSHOT"
+  }
 
-    testCompile "org.vert-x:vertx-junit-annotations:$junitAnnoVersion"
-    testCompile "org.vert-x:vertx-lang-java:$vertxVersion"
-    testCompile "org.vert-x:vertx-lang-rhino:$vertxVersion"
-    testCompile "org.vert-x:vertx-lang-groovy:$vertxVersion"
-
-    testCompile "org.codehaus.groovy:groovy-all:$groovyVersion"
-    testCompile "org.mozilla:rhino:$rhinoVersion"
+  test {
+    testLogging.showStandardStreams = true
   }
 }
 
@@ -65,38 +69,26 @@ subprojects {
 // global task definitions
 
 task assembleAll(type: Sync, dependsOn: subprojects.assemble) {
-  destinationDir = file("build/vertx.management-v$version")
-  into("build/vertx.management-v$version/mods") {
-    subprojects.each { p->
-      from "${p.buildDir}/mod"
+  destinationDir = file("build/vertx.management-v${version}")
+  into("build/vertx.management-v${version}")
+  from('src/main/resources')
+  subprojects.each { p->
+    from("${p.buildDir}/mod") {
+      into("mods")
     }
   }
-  from 'src/main/conf'
-  from 'src/main/resources'
 }
 
-task cleanAll(dependsOn: subprojects.clean) {
-  //
+task cleanAll(type: Delete, dependsOn: subprojects.clean) {
+  delete 'build'
 }
 
 task testAll(dependsOn: subprojects.test) {
   //
 }
 
-task vertxIntegAll(dependsOn: subprojects.vertxInteg) {
-//
-}
-
-
-task assemble(type: Sync, dependsOn: subprojects.assemble) {
-  destinationDir = file("build/vertx.management-v$version")
-  into("build/vertx.management-v$version/mods") {
-    subprojects.each { p->
-      from "${p.buildDir}/mod"
-    }
-  }
-  from 'src/main/conf'
-  from 'src/main/resources'
+task buildAll(dependsOn: subprojects.build) {
+  //
 }
 
 // --------------------------------------------------------------------
@@ -110,30 +102,36 @@ project(":mod-management-common") {
 
 project(":mod-management-agent") {
   dependencies {
-    compile project(":mod-management-common")
+    // compile project(":mod-management-common")
   }
 }
 
 project(":mod-management-api") {
   dependencies {
-    compile project(":mod-management-common")
+    // compile project(":mod-management-common")
   }
 }
 
 project(":mod-management-gui") {
   dependencies {
-    compile project(":mod-management-common")
+    // compile project(":mod-management-common")
   }
 }
 
 project(":mod-management-monitor") {
   dependencies {
-    compile project(":mod-management-common")
+    // compile project(":mod-management-common")
   }
 }
 
 project(":mod-management-collector") {
   dependencies {
-    compile project(":mod-management-common")
+    // compile project(":mod-management-common")
   }
+}
+
+project(":mod-management-logsink") {
+    dependencies {
+        // project dependencies
+    }
 }

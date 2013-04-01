@@ -1,3 +1,4 @@
 {
-  "main":"org.vertx.mods.management.agent.ManagementAgentMod"
+  "main":"groovy:org.vertx.management.agent.ManagementAgent",
+  "worker": true
 }
