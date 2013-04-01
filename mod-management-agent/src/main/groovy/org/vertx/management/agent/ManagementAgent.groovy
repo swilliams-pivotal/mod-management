@@ -35,9 +35,9 @@ class ManagementAgent extends Verticle {
   long periodicID = 0
 
   List allowed = [
-    'reregister','checkBean',
-    'deployModule','undeployModule',
-    'deployVerticle','deployWorkerVerticle','undeployVerticle'
+    'reregister', 'checkBean',
+    'listDeployments', 'deployModule', 'undeployModule',
+    'deployVerticle', 'deployWorkerVerticle', 'undeployVerticle'
   ]
 
   String uid
@@ -171,7 +171,7 @@ class ManagementAgent extends Verticle {
     publish json, address
   }
 
-  
+
   private void deployModule(Map command) {
     String moduleName = command['module']
     Map config = command['config'] as Map ?: [:]
@@ -248,6 +248,13 @@ class ManagementAgent extends Verticle {
       ]
       publish json
     }
+  }
+
+  private void listDeployments(Map command) {
+    def json = [
+      deployments: deployments
+    ]
+    publish json
   }
 
 

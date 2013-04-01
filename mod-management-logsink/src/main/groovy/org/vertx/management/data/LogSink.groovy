@@ -68,10 +68,9 @@ class LogSink extends Verticle {
         assert ar.result instanceof AsyncFile
 
         this.file = ar.result as AsyncFile
-        // FIXME local causes error: vertx.eventBus.registerLocalHandler(address, this.&receiver) {
-        vertx.eventBus.registerHandler(address, this.&receiver) {
-          startedResult.setResult()
-        }
+
+        vertx.eventBus.registerLocalHandler(address, this.&receiver)
+        startedResult.setResult()
       }
       else {
         startedResult.setFailure(new IOException("'${fileName}' could not be opened"))

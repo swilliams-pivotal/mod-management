@@ -17,6 +17,7 @@ package org.vertx.management.agent
 
 import groovy.json.JsonOutput
 import groovy.transform.CompileStatic
+import java.util.zip.GZIPOutputStream
 import org.vertx.groovy.core.buffer.Buffer
 import org.vertx.groovy.core.eventbus.EventBus
 import org.vertx.groovy.core.eventbus.Message
@@ -61,20 +62,10 @@ class BlackBoxRecorder extends Verticle {
         assert ar.result instanceof AsyncFile
 
         this.file = ar.result as AsyncFile
-        /* 
-         * FIXME this should only be local: vertx.eventBus.registerLocalHandler(address, this.&receiver) {
-         * but it throws:
-         * 
-         * groovy.lang.MissingMethodException: No signature of method: 
-         * org.vertx.java.core.eventbus.impl.DefaultEventBus.registerLocalHandler() 
-         * is applicable for argument types: (java.lang.String, $Proxy7, $Proxy8) 
-         * values: [vertx.management.metrics, org.vertx.groovy.core.eventbus.EventBus$_wrapHandler_closure1@45fa3e3e, ...] 
-         * Possible solutions: registerLocalHandler(java.lang.String, org.vertx.java.core.Handler)
-         */
-        vertx.eventBus.registerHandler(address, this.&receiver) {
-          println "BlackBoxRecorder listening for data on: '${address}'"
-          startedResult.setResult()
-        }
+
+        vertx.eventBus.registerLocalHandler(address, this.&receiver)
+        println "BlackBoxRecorder listening for data on: '${address}'"
+        startedResult.setResult()
       }
       else {
         startedResult.setFailure(new IOException("BlackBoxRecorder '${fileName}' could not be opened"))
@@ -91,8 +82,21 @@ class BlackBoxRecorder extends Verticle {
 
   private void receiver(Message msg) {
     def json = JsonOutput.toJson(msg.body as Map)
-    Buffer buffer = new Buffer(json)
-    file?.writeStream.writeBuffer(buffer)
+
+    Buffer buffer = new Buffer(json + '\n')
+    int length = buffer.getLength()
+    if (length > 1024) {
+      for (def i=0; i < (length / 1024); i++) {
+        int start = i * 1024
+        int end = ((start + 1024) > length) ? length : start + 1024
+        Buffer chunk = buffer.getBuffer(start, end)
+        file?.writeStream.writeBuffer(buffer)
+      }
+    }
+    else {
+      file?.writeStream.writeBuffer(buffer)
+    }
+
   }
 
 }
