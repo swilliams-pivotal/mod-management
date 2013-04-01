@@ -34,7 +34,11 @@ class ManagementAgent extends Verticle {
 
   long periodicID = 0
 
-  List allowed = ['reregister','checkBean','']
+  List allowed = [
+    'reregister','checkBean',
+    'deployModule','undeployModule',
+    'deployVerticle','deployWorkerVerticle','undeployVerticle'
+  ]
 
   String uid
 
@@ -42,7 +46,7 @@ class ManagementAgent extends Verticle {
 
   Map config = [
     delay: 2000,
-    registry: 'vertx.management.registry',
+    status: 'vertx.management.status',
     agents: 'vertx.management.agents',
     metrics: 'vertx.management.metrics',
     beans: ['java.lang:type=Memory', 'java.lang:type=Threading', 'io.vertx.*:type=*']
@@ -98,12 +102,14 @@ class ManagementAgent extends Verticle {
    * @param address
    * @param json
    */
-  private void status(Map json, String address = config['agents']) {
+  private void publish(Map json, String address = config['metrics']) {
     vertx.eventBus.publish address, data(json)
   }
 
   private void configure() {
+    // register a unique listener and a broadcast listener
     vertx.eventBus.registerHandler(this.listener, this.&receiver) { res->
+      vertx.eventBus.registerHandler(config['agents'] as String, this.&receiver)
       long period = config['delay'] as long
       this.periodicID = vertx.setPeriodic period, this.&collectAndPublish
     }
@@ -118,6 +124,7 @@ class ManagementAgent extends Verticle {
   private void deconfigure() {
     if (periodicID) vertx.cancelTimer(periodicID)
     vertx.eventBus.unregisterHandler this.listener, this.&receiver
+    vertx.eventBus.unregisterHandler config['agents'] as String, this.&receiver
   }
 
 
@@ -128,14 +135,14 @@ class ManagementAgent extends Verticle {
       type: 'register',
       data: JMX.parseToList(names)
     ]
-    status json, config['registry'] as String
+    publish json, config['status'] as String
   }
 
   private void deregister() {
     def json = [
       type: 'deregister'
     ]
-    status json, config['registry'] as String
+    publish json, config['status'] as String
   }
 
 
@@ -148,30 +155,67 @@ class ManagementAgent extends Verticle {
   private Closure commands(String name) {
     def cmd = allowed.contains(name) ? this.&"$name" : { args->
       println "Unknown command ${name} with ${args}" }
+    cmd
   }
 
 
-  private void checkBean(String name, String address = config['metrics']) {
+  private void checkBean(Map command) {
+
+    String name = command['name']
+    String address = command['address'] ?: config['metrics']
 
     def names = JMX.queryNames name
     def beans = JMX.parseToList names
     def json = [:]
     json['data'] = beans
-    status json, address
+    publish json, address
   }
 
+  
+  private void deployModule(Map command) {
+    String moduleName = command['module']
+    Map config = command['config'] as Map ?: [:]
+    int instances = command['instances'] as int ?: 1
+
+    container.deployModule(moduleName, config, instances) { String did->
+      deployments.put moduleName, did
+      def json = [
+        verticle: moduleName,
+        deployment: did,
+        status: 'deployed'
+      ]
+      publish json
+    }
+  }
+
+  private void undeployModule(Map command) {
+    String moduleName = command['module']
+    String deploymentId = deployments.get('deployment')
+
+    container.undeployModule(deploymentId) {
+      // undeployed
+      def json = [
+        verticle: moduleName,
+        deployment: deploymentId,
+        status: 'undeployed'
+      ]
+      publish json
+    }
+  }
 
   private void deployVerticle(Map command) {
     String verticleName = command['verticle']
     Map config = command['config'] as Map ?: [:]
     int instances = command['instances'] as int ?: 1
+
     container.deployVerticle(verticleName, config, instances) { String did->
       deployments.put verticleName, did
       def json = [
         verticle: verticleName,
-        status: 'ok'
+        deployment: did,
+        status: 'deployed'
       ]
-      status json
+      publish json
     }
   }
 
@@ -179,25 +223,30 @@ class ManagementAgent extends Verticle {
     String verticleName = command['verticle']
     Map config = command['config'] as Map ?: [:]
     int instances = command['instances'] as int ?: 1
+
     container.deployVerticle(verticleName, config, instances) { String did->
       deployments.put verticleName, did
       def json = [
         verticle: verticleName,
-        status: 'ok'
+        deployment: did,
+        status: 'deployed'
       ]
-      status json
+      publish json
     }
   }
 
-  private void undeploy(Map command) {
-    String deploymentId = deployments.get(command['name'])
+  private void undeployVerticle(Map command) {
+    String verticleName = command['verticle']
+    String deploymentId = deployments.get('deployment')
+
     container.undeployVerticle(deploymentId) {
       // undeployed
       def json = [
-        command: command['name'],
-        status: 'ok'
+        verticle: verticleName,
+        deployment: deploymentId,
+        status: 'undeployed'
       ]
-      status json
+      publish json
     }
   }
 
