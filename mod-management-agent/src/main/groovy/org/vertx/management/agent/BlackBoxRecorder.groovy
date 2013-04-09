@@ -15,6 +15,7 @@
  */
 package org.vertx.management.agent
 
+import static org.vertx.management.Constants.*
 import groovy.json.JsonOutput
 import groovy.transform.CompileStatic
 import java.util.zip.GZIPOutputStream
@@ -36,7 +37,7 @@ import org.vertx.java.core.VoidResult;
 @CompileStatic
 class BlackBoxRecorder extends Verticle {
 
-  String address = 'vertx.management.metrics'
+  String address = METRICS_ADDRESS
 
   AsyncFile file
 
@@ -81,7 +82,7 @@ class BlackBoxRecorder extends Verticle {
   }
 
   private void receiver(Message msg) {
-    def json = JsonOutput.toJson(msg.body as Map)
+    def json = JsonOutput.toJson((Map) msg.body)
 
     Buffer buffer = new Buffer(json + '\n')
     int length = buffer.getLength()

@@ -1,8 +1,7 @@
-apply plugin: 'publishing'
 apply plugin: 'maven-publish'
 
-
-ext.modulePackageName = "${project.group}~${project.name}~${project.version}"
+ext.moduleName = "${project.name}".replaceFirst 'mod-', ''
+ext.modulePackageName = "${project.group}~${project.moduleName}~${project.version}"
 
 configurations {
   provided
@@ -12,25 +11,26 @@ configurations {
 publishing {
   repositories {
     maven {
-      credentials {
-        username project.sonatypeUsername
-        password project.sonatypePassword
-      }
       name 'snapshots'
       url 'https://oss.sonatype.org/content/repositories/snapshots'
-    }
-    maven {
       credentials {
         username project.sonatypeUsername
         password project.sonatypePassword
       }
+    }
+    maven {
       name 'staging'
       url 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
+      credentials {
+        username project.sonatypeUsername
+        password project.sonatypePassword
+      }
     }
   }
   publications {
     maven(MavenPublication) {
-      artifact("build/libs/${project.name}-${project.version}.zip") {
+      mavenProjectIdentity.artifactId = project.moduleName
+      artifact("build/libs/${project.moduleName}-${project.version}.zip") {
         extension "zip"
         builtBy zipMod
       }
@@ -61,7 +61,7 @@ task zipMod(type: Zip, dependsOn:['makeMod']) {
 
   from "build/mod/$modulePackageName"
 
-  archiveName = "${project.name}-${project.version}.zip"
+  archiveName = "${project.moduleName}-${project.version}.zip"
   // includes = ["$modulePackageName"]
 }
 

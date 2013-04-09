@@ -15,23 +15,23 @@
  */
 
 /*
-buildscript {
-  repositories {
-    maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
-    mavenCentral()
-  }
-  dependencies {
-    classpath "org.vert-x:gradle-plugin:1.3.0-SNAPSHOT"
-  }
-}
-*/
+ buildscript {
+ repositories {
+ maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+ mavenCentral()
+ }
+ dependencies {
+ classpath "org.vert-x:gradle-plugin:1.3.0-SNAPSHOT"
+ }
+ }
+ */
 apply from: 'gradle/setup.gradle'
 
 subprojects {
   // apply plugin: 'eclipse'
   apply plugin: 'groovy'
   apply plugin: 'build-dashboard'
-//  apply plugin: 'codenarc'
+  //  apply plugin: 'codenarc'
 
   apply from: "$rootDir/gradle/vertx.gradle"
 
@@ -57,6 +57,16 @@ subprojects {
 
     testCompile "junit:junit:$junitVersion"
     testCompile "io.vertx:testtools:1.0.0-SNAPSHOT"
+  }
+
+  compileJava {
+    sourceCompatibility = project.sourceCompatibility
+    targetCompatibility = project.targetCompatibility
+  }
+
+  compileTestJava {
+    sourceCompatibility = project.sourceCompatibility
+    targetCompatibility = project.targetCompatibility
   }
 
   test {
@@ -91,47 +101,51 @@ task buildAll(dependsOn: subprojects.build) {
   //
 }
 
+task mavenLocalAll(dependsOn: subprojects.publishToMavenLocal) {
+  //
+}
+
 // --------------------------------------------------------------------
 // Sub projects
 
-project(":mod-management-common") {
+project(':mod-management-common') {
   dependencies {
-      // project dependencies
+    // project dependencies
   }
 }
 
-project(":mod-management-agent") {
+project(':mod-management-agent') {
   dependencies {
-    // compile project(":mod-management-common")
+    compile project(':mod-management-common')
   }
 }
 
-project(":mod-management-api") {
+project(':mod-management-api') {
   dependencies {
-    // compile project(":mod-management-common")
+    // compile project(':mod-management-common')
   }
 }
 
-project(":mod-management-gui") {
+project(':mod-management-gui') {
   dependencies {
-    // compile project(":mod-management-common")
+    // compile project(':mod-management-common')
   }
 }
 
-project(":mod-management-monitor") {
+project(':mod-management-monitor') {
   dependencies {
-    // compile project(":mod-management-common")
+    compile project(':mod-management-common')
   }
 }
 
-project(":mod-management-collector") {
+project(':mod-management-collector') {
   dependencies {
-    // compile project(":mod-management-common")
+    compile project(':mod-management-common')
   }
 }
 
-project(":mod-management-logsink") {
-    dependencies {
-        // project dependencies
-    }
+project(':mod-management-logsink') {
+  dependencies {
+    compile project(':mod-management-common')
+  }
 }

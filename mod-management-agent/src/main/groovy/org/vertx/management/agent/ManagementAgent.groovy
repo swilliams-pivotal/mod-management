@@ -15,12 +15,14 @@
  */
 package org.vertx.management.agent
 
+import static org.vertx.management.Constants.*
+
+import java.lang.management.ManagementFactory;
+
 import groovy.transform.CompileStatic
 import org.vertx.groovy.core.eventbus.Message
 import org.vertx.groovy.platform.Verticle
 import org.vertx.java.core.VoidResult;
-
-import com.sun.corba.se.impl.orb.ORBConfiguratorImpl.ConfigParser;
 
 
 /**
@@ -30,12 +32,12 @@ import com.sun.corba.se.impl.orb.ORBConfiguratorImpl.ConfigParser;
 @CompileStatic
 class ManagementAgent extends Verticle {
 
-  static def BBR_CLASS = BlackBoxRecorder.class.getName()
+  static def BBR_CLASS = BlackBoxRecorder.name
 
   long periodicID = 0
 
   List allowed = [
-    'reregister', 'checkBean',
+    'ping', 'pong', 'reregister', 'checkBean',
     'listDeployments', 'deployModule', 'undeployModule',
     'deployVerticle', 'deployWorkerVerticle', 'undeployVerticle'
   ]
@@ -46,10 +48,14 @@ class ManagementAgent extends Verticle {
 
   Map config = [
     delay: 2000,
-    status: 'vertx.management.status',
-    agents: 'vertx.management.agents',
-    metrics: 'vertx.management.metrics',
-    beans: ['java.lang:type=Memory', 'java.lang:type=Threading', 'io.vertx.*:type=*']
+    status: STATUS_ADDRESS,
+    agents: AGENTS_ADDRESS,
+    metrics: METRICS_ADDRESS,
+    beans: [
+      ManagementFactory.MEMORY_MXBEAN_NAME,
+      ManagementFactory.THREAD_MXBEAN_NAME,
+      'io.vertx.*:type=*'
+    ]
   ]
 
   Map deployments = [:]
@@ -73,16 +79,16 @@ class ManagementAgent extends Verticle {
     if (provided['enable-bbr']) {
       def bbr_config = [:]
       bbr_config['address'] = config['metrics']
-      // bbr_config['fileDir'] = fileDir
 
-      container.deployVerticle('groovy:' + BBR_CLASS, bbr_config, 1) { id->
-        start()
-        startedResult.setResult()
+      container.deployVerticle("groovy:${BBR_CLASS}", bbr_config, 1) { id->
+        println "Deployed BlackBoxRecorder: $id"
       }
     }
 
     configure()
     register()
+
+    startedResult.setResult()
   }
 
   @Override
@@ -148,16 +154,20 @@ class ManagementAgent extends Verticle {
 
   private void receiver(Message message) {
     def body = message.body as Map
-    commands(body['command'] as String)
-        .call(body['args'])
+    String cmd = body['command']
+    if (allowed.contains(cmd)) {
+      invokeMethod(cmd, body['args'])
+    }
   }
 
-  private Closure commands(String name) {
-    def cmd = allowed.contains(name) ? this.&"$name" : { args->
-      println "Unknown command ${name} with ${args}" }
-    cmd
+  private void ping(String address) {
+    vertx.eventBus.send("", null)
   }
 
+  private void pong(Message msg) {
+    long timestamp = msg.body as long
+    msg.reply(System.currentTimeMillis() - timestamp)
+  }
 
   private void checkBean(Map command) {
 
@@ -190,6 +200,7 @@ class ManagementAgent extends Verticle {
 
   private void undeployModule(Map command) {
     String moduleName = command['module']
+    if (moduleName.startsWith('io.vertx~management-agent~')) return
     String deploymentId = deployments.get('deployment')
 
     container.undeployModule(deploymentId) {
