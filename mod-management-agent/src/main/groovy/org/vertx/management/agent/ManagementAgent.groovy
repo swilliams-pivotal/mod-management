@@ -161,7 +161,7 @@ class ManagementAgent extends Verticle {
   }
 
   private void ping(String address) {
-    vertx.eventBus.send("", null)
+    vertx.eventBus.send(address, System.currentTimeMillis())
   }
 
   private void pong(Message msg) {
