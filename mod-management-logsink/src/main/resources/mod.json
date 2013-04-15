@@ -1,3 +1,3 @@
 {
-  "main":"groovy:org.vertx.management.data.EventBusToFile"
+  "main":"groovy:io.vertx.management.data.LogSink"
 }

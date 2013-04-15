@@ -41,6 +41,7 @@ subprojects {
   targetCompatibility = '1.7'
 
   repositories {
+    mavenLocal()
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
     maven { url 'http://repo.springsource.org/release' }
     mavenCentral()
@@ -52,7 +53,7 @@ subprojects {
   dependencies {
     provided "io.vertx:vertx-core:$vertxVersion"
     provided "io.vertx:vertx-platform:$vertxVersion"
-    provided "io.vertx:lang-groovy:1.0.0-SNAPSHOT"
+    provided "io.vertx:lang-groovy:1.0.0-SNAPSHOT@jar"
     provided "org.codehaus.groovy:groovy-all:$groovyVersion"
 
     testCompile "junit:junit:$junitVersion"
@@ -70,6 +71,8 @@ subprojects {
   }
 
   test {
+    systemProperty 'vertx.test.timeout', 30
+    systemProperty 'vertx.modulename', project.modulePackageName
     testLogging.showStandardStreams = true
   }
 }

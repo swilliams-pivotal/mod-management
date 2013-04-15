@@ -1,4 +1,4 @@
 {
-  "main":"groovy:org.vertx.management.agent.ManagementAgent",
+  "main":"groovy:io.vertx.management.agent.ManagementAgent",
   "worker": true
 }

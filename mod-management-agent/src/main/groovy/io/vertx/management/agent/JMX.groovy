@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.vertx.management.agent
+package io.vertx.management.agent
 
 import java.beans.Introspector
 import java.lang.management.ManagementFactory
@@ -24,33 +24,34 @@ import javax.management.ObjectName
 import javax.management.RuntimeMBeanException
 import javax.management.openmbean.CompositeData
 import javax.management.openmbean.CompositeDataSupport
+import javax.management.openmbean.CompositeType
 import javax.management.openmbean.TabularDataSupport
 import groovy.transform.CompileStatic
 
 
-//@CompileStatic
+@CompileStatic
 class JMX {
 
   static MBeanServer server = ManagementFactory.platformMBeanServer
 
-  static List queryNames(String... queries) {
+  static SortedSet queryNames(String... queries) {
     queryNames Arrays.asList(queries)
   }
 
-  static List queryNames(List<String> queries) {
-    def all = []
+  static SortedSet queryNames(List<String> queries) {
+    Set all = new TreeSet()
     for (String q : queries) {
       try {
         def name = new ObjectName(q)
         def names = server.queryNames(name, null)
-        all.addAll names.collect { ObjectName on-> on.serializedNameString }
+        all.addAll names.collect { ObjectName on-> on.getCanonicalName() }
       }
       catch (Throwable t) {
         println "query: ${q} ${t.message}"
         t.printStackTrace()
       }
     }
-    all
+    all.sort()
   }
 
   static List parseToList(beanNames) {
@@ -70,7 +71,8 @@ class JMX {
         }
       }
   
-      res << [name:beanName, data:map]
+      res << [name:beanName, bean:map]
+      // res << ["'${beanName}'":map]
     }
     res
   }
@@ -80,7 +82,7 @@ class JMX {
     def value
     try {
       value = server.getAttribute(objname, name)
-      if ('ObjectName' == name) ((ObjectName) value).serializedNameString
+      if ('ObjectName' == name) ((ObjectName) value).getCanonicalName()
       else mapTypes(value)
     }
     catch (RuntimeMBeanException e) {
@@ -106,14 +108,14 @@ class JMX {
   private static Map compositeData(type) {
     def data = (CompositeData) type
     def map = [:]
-    data.compositeType.myNamesSet.each { String key->
+    data.compositeType.keySet().each { String key->
       map.put key, mapTypes(data.get(key))
     }
     map
   }
 
-  private static Map compositeDataSupport(type) {
-    ((CompositeDataSupport) type).contents
+  private static Object compositeDataSupport(type) {
+    ((CompositeDataSupport) type).getCompositeType()
   }
 
   private static Map tabularDataSupport(type) {

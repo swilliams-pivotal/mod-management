@@ -13,15 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.vertx.management.agent
+package io.vertx.management.agent
 
 import static org.vertx.management.Constants.*
 
 import java.lang.management.ManagementFactory;
+import java.util.concurrent.locks.ReentrantLock
 
 import groovy.transform.CompileStatic
 import org.vertx.groovy.core.eventbus.Message
 import org.vertx.groovy.platform.Verticle
+import org.vertx.java.core.AsyncResult
 import org.vertx.java.core.VoidResult;
 
 
@@ -32,23 +34,23 @@ import org.vertx.java.core.VoidResult;
 @CompileStatic
 class ManagementAgent extends Verticle {
 
+  private static final String MANAGEMENT_AGENT_MAP = 'management.agent'
   static def BBR_CLASS = BlackBoxRecorder.name
 
   long periodicID = 0
 
   List allowed = [
-    'ping', 'pong', 'reregister', 'checkBean',
+    'test', 'config', 'ping', 'pong', 'reregister', 'reconfigure', 'checkBean',
     'listDeployments', 'deployModule', 'undeployModule',
     'deployVerticle', 'deployWorkerVerticle', 'undeployVerticle'
   ]
 
-  String uid
-
   String listener
+  boolean started = false
 
   Map config = [
-    delay: 2000,
-    status: STATUS_ADDRESS,
+    period: 10,
+    group: 'default',
     agents: AGENTS_ADDRESS,
     metrics: METRICS_ADDRESS,
     beans: [
@@ -71,35 +73,45 @@ class ManagementAgent extends Verticle {
       }
     }
 
-    // fixed at startup time, we don't want to reconfigure these
-    this.uid = provided['uid'] ?: UUID.randomUUID().toString()
-    this.listener = String.format('%s.%s', config['agents'], this.uid)
+    def agent = vertx.sharedData.getMap(MANAGEMENT_AGENT_MAP)
+    def random = new Random().nextLong()
+    def uuid = new UUID(System.currentTimeMillis(), random).toString()
 
-    // deploy BlackBoxRecorder if configured
-    if (provided['enable-bbr']) {
-      def bbr_config = [:]
-      bbr_config['address'] = config['metrics']
+    agent.putIfAbsent('uid', provided['uid'] ?: uuid)
+    if (uid() == uuid) started = true
 
-      container.deployVerticle("groovy:${BBR_CLASS}", bbr_config, 1) { id->
-        println "Deployed BlackBoxRecorder: $id"
+    if (started) {
+      // deploy BlackBoxRecorder if configured
+      if (provided['enable-bbr']) {
+        def bbr_config = [:]
+        bbr_config['address'] = config['metrics']
+
+        container.deployVerticle("groovy:${BBR_CLASS}", bbr_config, 1) { id->
+          println "Deployed BlackBoxRecorder: $id"
+        }
       }
-    }
 
-    configure()
-    register()
+      this.listener = String.format('%s.%s', config['agents'], uid())
+
+      configure()
+      started()
+    }
 
     startedResult.setResult()
   }
 
   @Override
   def stop() throws Exception {
-    deregister()
-    deconfigure()
+    if (started) {
+      shutdown()
+      deconfigure()
+      vertx.sharedData.removeMap(MANAGEMENT_AGENT_MAP)
+    }
   }
 
   private Map data(Map json = [:]) {
-    if (!json.containsKey('sender')) json['sender'] = this.uid
-    if (!json.containsKey('time')) json['time'] = System.currentTimeMillis()
+    if (!json.containsKey('sender')) json['sender'] = uid()
+    if (!json.containsKey('tstamp')) json['tstamp'] = System.currentTimeMillis()
     json
   }
 
@@ -109,15 +121,21 @@ class ManagementAgent extends Verticle {
    * @param json
    */
   private void publish(Map json, String address = config['metrics']) {
+    // println "sending ${data(json)} to '${address}'"
     vertx.eventBus.publish address, data(json)
   }
 
   private void configure() {
     // register a unique listener and a broadcast listener
-    vertx.eventBus.registerHandler(this.listener, this.&receiver) { res->
-      vertx.eventBus.registerHandler(config['agents'] as String, this.&receiver)
-      long period = config['delay'] as long
-      this.periodicID = vertx.setPeriodic period, this.&collectAndPublish
+    vertx.eventBus.registerHandler(this.listener, this.&receiver) { AsyncResult arb->
+      if (arb.succeeded()) {
+        vertx.eventBus.registerHandler(config['agents'] as String, this.&receiver) { AsyncResult ara->
+          if (ara.succeeded()) {
+            long period = config['period'] as long
+            this.periodicID = vertx.setPeriodic period * 1000, this.&collectAndPublish
+          }
+        }
+      }
     }
   }
 
@@ -133,34 +151,31 @@ class ManagementAgent extends Verticle {
     vertx.eventBus.unregisterHandler config['agents'] as String, this.&receiver
   }
 
-
-  private void register() {
-    def queries = ['java.lang:type=*','java.lang:type=*,*']
-    def names = JMX.queryNames queries
+  private void started() {
     def json = [
-      type: 'register',
-      data: JMX.parseToList(names)
+      type: 'started'
     ]
-    publish json, config['status'] as String
+    publish json, config['agents'] as String
   }
 
-  private void deregister() {
+  private void shutdown() {
     def json = [
-      type: 'deregister'
+      type: 'shutdown'
     ]
-    publish json, config['status'] as String
+    publish json, config['agents'] as String
   }
 
-
-  private void receiver(Message message) {
+  def receiver(Message message) {
     def body = message.body as Map
-    String cmd = body['command']
+    String cmd = body['type']
     if (allowed.contains(cmd)) {
-      invokeMethod(cmd, body['args'])
+      invokeMethod(cmd, message)
     }
   }
 
-  private void ping(String address) {
+  private void ping(Message msg) {
+    def command = msg.body as Map
+    String address = command['address']
     vertx.eventBus.send(address, System.currentTimeMillis())
   }
 
@@ -169,8 +184,19 @@ class ManagementAgent extends Verticle {
     msg.reply(System.currentTimeMillis() - timestamp)
   }
 
-  private void checkBean(Map command) {
+  private void test(Message msg) {
+    def body = msg.body as Map
+    long timestamp = body['tstamp'] as long
+    body.put('diff', System.currentTimeMillis() - timestamp)
+    msg.reply(body)
+  }
 
+  private void config(Message msg) {
+    msg.reply(config)
+  }
+
+  private void checkBean(Message msg) {
+    def command = msg.body as Map
     String name = command['name']
     String address = command['address'] ?: config['metrics']
 
@@ -182,7 +208,8 @@ class ManagementAgent extends Verticle {
   }
 
 
-  private void deployModule(Map command) {
+  private void deployModule(Message msg) {
+    def command = msg.body as Map
     String moduleName = command['module']
     Map config = command['config'] as Map ?: [:]
     int instances = command['instances'] as int ?: 1
@@ -198,7 +225,8 @@ class ManagementAgent extends Verticle {
     }
   }
 
-  private void undeployModule(Map command) {
+  private void undeployModule(Message msg) {
+    def command = msg.body as Map
     String moduleName = command['module']
     if (moduleName.startsWith('io.vertx~management-agent~')) return
     String deploymentId = deployments.get('deployment')
@@ -214,7 +242,8 @@ class ManagementAgent extends Verticle {
     }
   }
 
-  private void deployVerticle(Map command) {
+  private void deployVerticle(Message msg) {
+    def command = msg.body as Map
     String verticleName = command['verticle']
     Map config = command['config'] as Map ?: [:]
     int instances = command['instances'] as int ?: 1
@@ -230,7 +259,8 @@ class ManagementAgent extends Verticle {
     }
   }
 
-  private void deployWorkerVerticle(Map command) {
+  private void deployWorkerVerticle(Message msg) {
+    def command = msg.body as Map
     String verticleName = command['verticle']
     Map config = command['config'] as Map ?: [:]
     int instances = command['instances'] as int ?: 1
@@ -246,7 +276,8 @@ class ManagementAgent extends Verticle {
     }
   }
 
-  private void undeployVerticle(Map command) {
+  private void undeployVerticle(Message msg) {
+    def command = msg.body as Map
     String verticleName = command['verticle']
     String deploymentId = deployments.get('deployment')
 
@@ -261,7 +292,8 @@ class ManagementAgent extends Verticle {
     }
   }
 
-  private void listDeployments(Map command) {
+  private void listDeployments(Message msg) {
+    def command = msg.body as Map
     def json = [
       deployments: deployments
     ]
@@ -278,8 +310,13 @@ class ManagementAgent extends Verticle {
   private void collectAndPublish(long id) {
     def names = JMX.queryNames config['beans'] as List
     def beans = JMX.parseToList names
-    def json = ['data': beans]
+    def json = ['metrics': beans]
     vertx.eventBus.publish config['metrics'] as String, data(json)
+  }
+
+  private String uid() {
+    def agent = vertx.sharedData.getMap(MANAGEMENT_AGENT_MAP)
+    agent.get 'uid'
   }
 
 }

@@ -1,5 +1,6 @@
-package org.vertx.management.data
+package io.vertx.management.data
 
+import static org.vertx.management.Constants.*
 import groovy.transform.CompileStatic
 import org.vertx.groovy.core.buffer.Buffer
 import org.vertx.groovy.core.eventbus.Message
@@ -40,7 +41,9 @@ import org.vertx.java.core.VoidResult;
 @CompileStatic
 class LogSink extends Verticle {
 
-  String address = 'vertx.management.log'
+  String fileName
+  String perms
+  String address = LOG_ADDRESS
 
   String defaultFormat = '%s'
 
@@ -48,34 +51,21 @@ class LogSink extends Verticle {
 
 
   @Override
-  def start(VoidResult startedResult) throws Exception {
+  def start(VoidResult result) throws Exception {
 
-    String fileName = container.config['fileName']
-    String perms = container.config['perms'] ?: 'rw-r--r--'
+    this.fileName = container.config['fileName']
+    this.perms = container.config['perms'] ?: 'rw-r--r--'
 
     assert fileName != null
 
     if (container.config.containsKey('address')) {
       this.address = container.config['address']
     }
-
     if (container.config.containsKey('format')) {
       this.defaultFormat = container.config['format']
     }
 
-    vertx.fileSystem.open(fileName, perms, false, true, true) { AsyncResult ar->
-      if (ar.succeeded()) {
-        assert ar.result instanceof AsyncFile
-
-        this.file = ar.result as AsyncFile
-
-        vertx.eventBus.registerLocalHandler(address, this.&receiver)
-        startedResult.setResult()
-      }
-      else {
-        startedResult.setFailure(new IOException("'${fileName}' could not be opened"))
-      }
-    }
+    configure(result)
   }
 
   @Override
@@ -85,7 +75,23 @@ class LogSink extends Verticle {
     }
   }
 
-  private void receiver(Message msg) {
+  private void configure(VoidResult result) {
+    vertx.fileSystem.open(fileName, perms, false, true, true) { AsyncResult ar->
+      if (ar.succeeded()) {
+        assert ar.result instanceof AsyncFile
+
+        this.file = ar.result as AsyncFile
+
+        vertx.eventBus.registerLocalHandler(address, this.&receiver)
+        result.setResult()
+      }
+      else {
+        result.setFailure(new IOException("'${fileName}' could not be opened"))
+      }
+    }
+  }
+
+  def receiver(Message msg) {
     Map body = msg.body as Map
 
     def args = body['args'] as List

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.vertx.management.agent
+package io.vertx.management.agent
 
 import static org.vertx.management.Constants.*
 import groovy.json.JsonOutput
