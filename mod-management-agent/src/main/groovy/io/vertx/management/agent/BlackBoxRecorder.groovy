@@ -26,11 +26,10 @@ import org.vertx.groovy.core.file.AsyncFile
 import org.vertx.groovy.core.file.FileSystem
 import org.vertx.groovy.platform.Verticle
 import org.vertx.java.core.AsyncResult
-import org.vertx.java.core.VoidResult;
+import org.vertx.java.core.Future
 
 
 /**
- * 
  * @author pidster
  *
  */
@@ -43,7 +42,7 @@ class BlackBoxRecorder extends Verticle {
 
 
   @Override
-  def start(VoidResult startedResult) throws Exception {
+  def start(Future<Void> future) {
 
     String perms = container.config['perms'] ?: 'rw-------'
 
@@ -60,22 +59,22 @@ class BlackBoxRecorder extends Verticle {
     vertx.fileSystem.open(fileName, perms, true, true, true, true) { AsyncResult ar->
       if (ar.succeeded()) {
         println "BlackBoxRecorder configured at: '${fileName}'"
-        assert ar.result instanceof AsyncFile
+        assert ar.result() instanceof AsyncFile
 
-        this.file = ar.result as AsyncFile
+        this.file = ar.result() as AsyncFile
 
         vertx.eventBus.registerLocalHandler(address, this.&receiver)
         println "BlackBoxRecorder listening for data on: '${address}'"
-        startedResult.setResult()
+        future.setResult(null)
       }
       else {
-        startedResult.setFailure(new IOException("BlackBoxRecorder '${fileName}' could not be opened"))
+        future.setFailure(new IOException("BlackBoxRecorder '${fileName}' could not be opened"))
       }
     }
   }
 
   @Override
-  def stop() throws Exception {
+  def stop() {
     vertx.eventBus.unregisterHandler(address, this.&receiver) {
       file?.close()
     }
@@ -91,11 +90,11 @@ class BlackBoxRecorder extends Verticle {
         int start = i * 1024
         int end = ((start + 1024) > length) ? length : start + 1024
         Buffer chunk = buffer.getBuffer(start, end)
-        file?.writeStream.writeBuffer(buffer)
+        file?.write(buffer)
       }
     }
     else {
-      file?.writeStream.writeBuffer(buffer)
+      file?.write(buffer)
     }
 
   }

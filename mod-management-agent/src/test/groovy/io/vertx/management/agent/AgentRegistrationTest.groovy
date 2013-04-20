@@ -39,7 +39,7 @@ class AgentRegistrationTest extends TestVerticle {
     vertx.eventBus().registerHandler(AGENTS_ADDRESS, { Message msg->
       results.add(msg.body)
     } as Handler, { res->
-      container.deployWorkerVerticle('groovy:io.vertx.management.agent.ManagementAgent', new JsonObject(), 5, false, { did->
+      container.deployWorkerVerticle('groovy:io.vertx.management.agent.ManagementAgent', new JsonObject(), 2, false, { did->
         vertx.setTimer(2000, { id->
           assertEquals(1, results.size())
           testComplete()

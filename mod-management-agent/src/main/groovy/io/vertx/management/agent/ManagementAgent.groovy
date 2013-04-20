@@ -22,9 +22,9 @@ import java.util.concurrent.locks.ReentrantLock
 
 import groovy.transform.CompileStatic
 import org.vertx.groovy.core.eventbus.Message
-import org.vertx.groovy.platform.Verticle
 import org.vertx.java.core.AsyncResult
-import org.vertx.java.core.VoidResult;
+import org.vertx.java.core.Future
+import io.vertx.mods.management.SingleInstanceVerticle
 
 
 /**
@@ -32,7 +32,7 @@ import org.vertx.java.core.VoidResult;
  *
  */
 @CompileStatic
-class ManagementAgent extends Verticle {
+class ManagementAgent extends SingleInstanceVerticle {
 
   private static final String MANAGEMENT_AGENT_MAP = 'management.agent'
   static def BBR_CLASS = BlackBoxRecorder.name
@@ -51,9 +51,11 @@ class ManagementAgent extends Verticle {
   Map config = [
     period: 10,
     group: 'default',
+    'enable-bbr': false,
     agents: AGENTS_ADDRESS,
     metrics: METRICS_ADDRESS,
     beans: [
+      ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME,
       ManagementFactory.MEMORY_MXBEAN_NAME,
       ManagementFactory.THREAD_MXBEAN_NAME,
       'io.vertx.*:type=*'
@@ -63,65 +65,59 @@ class ManagementAgent extends Verticle {
   Map deployments = [:]
 
   @Override
-  def start(VoidResult startedResult) throws Exception {
+  protected String prestart() throws Exception {
     Map provided = container.getConfig()
 
     // apply only the things we already know about
+    // configure against a known default config
     config.each { key, val->
-      if (provided.containsKey(key)) {
+      if (provided.containsKey(key))
         config[key] = provided[key]
+    }
+
+    MANAGEMENT_AGENT_MAP
+  }
+
+
+  @Override
+  protected void startMod(Future<Void> future) throws Exception {
+
+    // deploy BlackBoxRecorder if configured
+    if (config['enable-bbr']) {
+      def bbr_config = [:]
+      bbr_config['address'] = config['metrics']
+
+      container.deployVerticle("groovy:${BBR_CLASS}", bbr_config, 1) { id->
+        println "Deployed BlackBoxRecorder: $id"
       }
     }
 
-    def agent = vertx.sharedData.getMap(MANAGEMENT_AGENT_MAP)
-    def random = new Random().nextLong()
-    def uuid = new UUID(System.currentTimeMillis(), random).toString()
+    this.listener = String.format('%s.%s', config['agents'], uuid())
 
-    agent.putIfAbsent('uid', provided['uid'] ?: uuid)
-    if (uid() == uuid) started = true
+    configure()
+    started()
 
-    if (started) {
-      // deploy BlackBoxRecorder if configured
-      if (provided['enable-bbr']) {
-        def bbr_config = [:]
-        bbr_config['address'] = config['metrics']
-
-        container.deployVerticle("groovy:${BBR_CLASS}", bbr_config, 1) { id->
-          println "Deployed BlackBoxRecorder: $id"
-        }
-      }
-
-      this.listener = String.format('%s.%s', config['agents'], uid())
-
-      configure()
-      started()
-    }
-
-    startedResult.setResult()
+    future.setResult(null)
   }
 
   @Override
-  def stop() throws Exception {
-    if (started) {
-      shutdown()
-      deconfigure()
-      vertx.sharedData.removeMap(MANAGEMENT_AGENT_MAP)
-    }
+  protected void stopMod() {
+    shutdown()
+    deconfigure()
+    vertx.sharedData.removeMap(MANAGEMENT_AGENT_MAP)
   }
 
   private Map data(Map json = [:]) {
-    if (!json.containsKey('sender')) json['sender'] = uid()
+    if (!json.containsKey('sender')) json['sender'] = uuid()
     if (!json.containsKey('tstamp')) json['tstamp'] = System.currentTimeMillis()
     json
   }
 
   /**
-   * 
    * @param address
    * @param json
    */
   private void publish(Map json, String address = config['metrics']) {
-    // println "sending ${data(json)} to '${address}'"
     vertx.eventBus.publish address, data(json)
   }
 
@@ -309,14 +305,9 @@ class ManagementAgent extends Verticle {
    */
   private void collectAndPublish(long id) {
     def names = JMX.queryNames config['beans'] as List
-    def beans = JMX.parseToList names
+    def beans = JMX.parseToMap names
     def json = ['metrics': beans]
     vertx.eventBus.publish config['metrics'] as String, data(json)
-  }
-
-  private String uid() {
-    def agent = vertx.sharedData.getMap(MANAGEMENT_AGENT_MAP)
-    agent.get 'uid'
   }
 
 }

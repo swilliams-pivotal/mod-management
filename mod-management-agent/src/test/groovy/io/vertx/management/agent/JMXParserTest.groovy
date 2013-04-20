@@ -9,21 +9,24 @@ import groovy.json.JsonOutput
 
 
 class JMXParserTest {
-  
+
   @Test
-  public void testCollectRuntime() {
+  public void testCollectRuntime() throws Exception {
     def beans = JMX.queryNames('java.lang:type=Runtime')
     beans.each { bean->
       assertEquals('java.lang:type=Runtime', bean)
     }
 
-    def list = JMX.parseToList beans
-    def beanName = list[0] as Map
-    assertEquals(beanName.bean.systemProperties.'vertx.test.magicProperty', 'fooBar')
+    def results = JMX.parseToMap beans
+    def bean = results['java.lang:type=Runtime']
+
+    assertNotNull(bean)
+
+    assertEquals(bean.systemProperties.'vertx.test.magicProperty', 'fooBar')
   }
 
   @Test
-  public void testCollectCompilation() {
+  public void testCollectCompilation() throws Exception {
     def beans = JMX.queryNames('java.lang:type=Compilation')
     beans.each { bean->
       assertEquals('java.lang:type=Compilation', bean)
@@ -31,7 +34,7 @@ class JMXParserTest {
   }
 
   @Test
-  public void testCollectOperatingSystem() {
+  public void testCollectOperatingSystem() throws Exception {
     def beans = JMX.queryNames('java.lang:type=OperatingSystem')
     beans.each { bean->
       assertEquals('java.lang:type=OperatingSystem', bean)
@@ -53,7 +56,7 @@ java.lang:type=Threading''', beans.join('\n'))
   @Test
   public void testCollectAndPrintVarious() {
     def beans = JMX.queryNames('java.lang:type=*', 'java.lang:type=*,*')
-    def json = JMX.parseToList(beans)
+    def json = JMX.parseToMap(beans)
     println JsonOutput.toJson(json)
   }
 

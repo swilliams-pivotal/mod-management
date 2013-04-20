@@ -23,4 +23,6 @@ The Monitor module is responsible for observing a vert.x system and publishing m
 The LogSink module listens to the Event Bus for data and writes it to a file.  This provides the opportunity to perform asynchronous logging via the Event Bus.  An application should configure a logger that publishes to the Event Bus rather than synchronously writing to disk.
 
 
+ vertx.management.agents.6e067807-6f89-4975-a416-e8697583d73e
 
+ vertx.management.agents.6e067807-6f89-4975-a416-e8697583d73e

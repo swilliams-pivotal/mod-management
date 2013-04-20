@@ -7,7 +7,7 @@ import org.vertx.groovy.core.eventbus.Message
 import org.vertx.groovy.core.file.AsyncFile
 import org.vertx.groovy.platform.Verticle
 import org.vertx.java.core.AsyncResult
-import org.vertx.java.core.VoidResult;
+import org.vertx.java.core.Future
 
 /**
  * Deployment configuration is (in JavaScript), as follows:
@@ -51,7 +51,7 @@ class LogSink extends Verticle {
 
 
   @Override
-  def start(VoidResult result) throws Exception {
+  def start(Future<Void> result) {
 
     this.fileName = container.config['fileName']
     this.perms = container.config['perms'] ?: 'rw-r--r--'
@@ -69,21 +69,22 @@ class LogSink extends Verticle {
   }
 
   @Override
-  def stop() throws Exception {
+  def stop() {
+    file?.flush()
     vertx.eventBus.unregisterHandler(address, this.&receiver) {
       file?.close()
     }
   }
 
-  private void configure(VoidResult result) {
+  private void configure(Future<Void> result) {
     vertx.fileSystem.open(fileName, perms, false, true, true) { AsyncResult ar->
       if (ar.succeeded()) {
-        assert ar.result instanceof AsyncFile
+        assert ar.result() instanceof AsyncFile
 
-        this.file = ar.result as AsyncFile
+        this.file = ar.result() as AsyncFile
 
         vertx.eventBus.registerLocalHandler(address, this.&receiver)
-        result.setResult()
+        result.setResult(null)
       }
       else {
         result.setFailure(new IOException("'${fileName}' could not be opened"))
@@ -100,7 +101,7 @@ class LogSink extends Verticle {
     def buffer = new Buffer()
       .appendString(String.format(format, args.toArray()))
 
-    file?.writeStream.writeBuffer(buffer)
+    file?.write(buffer)
   }
 
 }

@@ -29,6 +29,11 @@ import javax.management.openmbean.TabularDataSupport
 import groovy.transform.CompileStatic
 
 
+
+/**
+ * @author swilliams
+ *
+ */
 @CompileStatic
 class JMX {
 
@@ -54,6 +59,28 @@ class JMX {
     all.sort()
   }
 
+  static Map parseToMap(beanNames) {
+    def res = [:]
+    for (String beanName : beanNames) {
+      def map = [:]
+      def objname = new ObjectName(beanName)
+  
+      if (server.isRegistered(objname)) {
+        def mbeanInfo = server.getMBeanInfo(objname)
+        def MBeanAttributeInfo[] attr = mbeanInfo.attributes
+  
+        for (MBeanAttributeInfo mai : attr) {
+          def attrName = Introspector.decapitalize(mai.name)
+          def attrValue = attribute(objname, mai.name)
+          if ('objectName' != attrName) map.put attrName, attrValue
+        }
+      }
+  
+      res.put(beanName, map)
+    }
+    res
+  }
+
   static List parseToList(beanNames) {
     def res = []
     for (String beanName : beanNames) {
@@ -71,8 +98,9 @@ class JMX {
         }
       }
   
-      res << [name:beanName, bean:map]
-      // res << ["'${beanName}'":map]
+      def bean = [:]
+      bean.put(beanName, map)
+      res << bean
     }
     res
   }

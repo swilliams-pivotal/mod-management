@@ -27,21 +27,27 @@ import org.vertx.testtools.TestVerticle
 import org.vertx.testtools.VertxAssert
 
 
+
+/**
+ * @author swilliams
+ *
+ */
 class MonitorTest extends TestVerticle {
 
   @Test
   public void testDeployAgent() {
 
     def mconfig = new JsonObject()
-
     container.deployVerticle('groovy:io.vertx.management.monitor.Monitor', mconfig, 1, { idm->
       assertNotNull(idm)
 
       def config = new JsonObject()
-      config.putNumber('period', 5)
       container.deployModule('io.vertx~management-agent~1.0.0-SNAPSHOT', config, 1, { ida->
         assertNotNull(ida)
         testComplete()
+
+        
+
       } as Handler)
     } as Handler)
   }
